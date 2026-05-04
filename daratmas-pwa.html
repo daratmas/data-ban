@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daratmas Ban">
+<meta name="theme-color" content="#0a0b0e">
+<title>Daratmas — Tire Input</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0b0e;--s1:#111318;--s2:#181c24;--bd:#252d3f;--bd2:#2e3850;
+  --acc:#f5a623;--acc2:#e8941a;--ok:#22c55e;--warn:#eab308;--danger:#ef4444;--blue:#38bdf8;
+  --txt:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;
+  --head-col:#38bdf8;--ekor-col:#a78bfa;
+  --display:'Syne',sans-serif;--body:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:12px;--rsm:8px;
+  --safe-b:env(safe-area-inset-bottom,20px);--safe-t:env(safe-area-inset-top,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--txt);font-family:var(--body);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:200;padding-top:var(--safe-t);background:rgba(10,11,14,.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--bd)}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;height:54px}
+.logo{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.05em;color:var(--acc);line-height:1}
+.logo-tag{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--muted);margin-top:1px;text-transform:uppercase}
+.sync-chip{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--muted);background:var(--s2);border:1px solid var(--bd);padding:4px 8px;border-radius:20px;cursor:pointer}
+.sync-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.sync-dot.ok{background:var(--ok)}
+.sync-dot.loading{background:var(--warn);animation:pulse .8s infinite}
+.sync-dot.error{background:var(--danger)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tabbar{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--bd);background:var(--s1)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 4px 9px;cursor:pointer;position:relative;gap:3px}
+.tab::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--acc);border-radius:2px 2px 0 0;transform:scaleX(0);transition:transform .2s}
+.tab.active::after{transform:scaleX(1)}
+.tab-icon{font-size:17px;line-height:1;opacity:.45;transition:opacity .15s}
+.tab-label{font-family:var(--display);font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tab.active .tab-icon{opacity:1}
+.tab.active .tab-label{color:var(--acc)}
+.main{position:relative;z-index:1;padding-top:calc(54px + 44px + var(--safe-t));padding-bottom:calc(24px + var(--safe-b));min-height:100vh}
+.screen{display:none;padding:16px;animation:fadeUp .2s ease}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.page-hdr{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.page-icon{width:40px;height:40px;border-radius:var(--rsm);display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--s2);border:1px solid var(--bd2);flex-shrink:0}
+.page-title{font-family:var(--display);font-weight:800;font-size:20px;color:var(--txt)}
+.page-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.card-hdr{padding:9px 14px;background:var(--s2);border-bottom:1px solid var(--bd);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);display:flex;align-items:center;gap:6px}
+.card-hdr-dot{width:5px;height:5px;border-radius:50%;background:var(--acc)}
+.card-body{padding:14px;display:flex;flex-direction:column;gap:13px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field-lbl{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);display:flex;align-items:center;gap:4px}
+.req{color:var(--acc);font-size:13px;line-height:1}
+.field input,.field select,.field textarea{background:var(--s2);border:1.5px solid var(--bd2);color:var(--txt);padding:11px 13px;border-radius:var(--rsm);font-family:var(--body);font-size:15px;width:100%;outline:none;transition:border-color .15s,background .15s;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--acc);background:rgba(245,166,35,.05)}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.field select option{background:var(--s2)}
+.field textarea{resize:none;min-height:72px;line-height:1.5}
+.field-hint{font-size:11px;color:var(--muted);font-style:italic;line-height:1.4}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg-btn{padding:10px;border-radius:var(--rsm);background:var(--s2);border:1.5px solid var(--bd2);color:var(--muted2);font-family:var(--display);font-weight:700;font-size:13px;text-align:center;cursor:pointer;transition:all .12s}
+.seg-btn:active{transform:scale(.97)}
+.seg-btn.on{background:rgba(245,166,35,.12);border-color:var(--acc);color:var(--acc)}
+.diagram-wrap{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rsm);padding:14px 10px 10px}
+.diagram-title{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:12px}
+.axle-group{margin-bottom:10px}
+.axle-label{font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:5px;letter-spacing:.1em}
+.axle-slots{display:flex;align-items:center;justify-content:center;gap:5px}
+.spacer-slot{width:20px}
+.slot{width:34px;height:50px;border-radius:5px;border:1.5px solid;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .1s}
+.slot:active{transform:scale(.9)}
+.slot-n{font-family:var(--mono);font-size:12px;font-weight:500;line-height:1}
+.slot-t{font-family:var(--mono);font-size:7px;opacity:.6;margin-top:1px}
+.slot.luar{border-color:rgba(34,197,94,.45);color:var(--ok);background:rgba(34,197,94,.05)}
+.slot.dalam{border-color:rgba(56,189,248,.45);color:var(--blue);background:rgba(56,189,248,.05)}
+.slot.serep{border-color:rgba(239,68,68,.4);color:var(--danger);background:rgba(239,68,68,.04)}
+.slot.on{transform:scale(1.1);box-shadow:0 0 0 2px var(--acc),0 4px 12px rgba(245,166,35,.2);border-color:var(--acc)!important;color:var(--acc)!important;background:rgba(245,166,35,.1)!important}
+.sep-row{display:flex;align-items:center;gap:8px;padding:2px 0}
+.sep-txt{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--muted);white-space:nowrap;text-transform:uppercase}
+.sep-row::before,.sep-row::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--bd),transparent)}
+.cond{display:none;flex-direction:column;gap:13px}
+.cond.show{display:flex}
+.posisi-display{font-family:var(--mono);font-size:12px;padding:8px 12px;border-radius:var(--rsm);border:1px dashed var(--bd2);color:var(--muted);transition:all .2s}
+.posisi-display.selected{border-color:var(--ok);color:var(--ok);background:rgba(34,197,94,.05)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;padding:8px 0 0}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:2px}
+.btn-kirim{width:100%;background:var(--acc);color:#000;border:none;padding:16px;border-radius:var(--r);font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;transition:transform .1s,background .1s}
+.btn-kirim:active{transform:scale(.98);background:var(--acc2)}
+.btn-kirim:disabled{opacity:.4;pointer-events:none}
+.btn-kirim .spin{display:none;width:16px;height:16px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite}
+.btn-kirim.loading .spin{display:block}
+.btn-kirim.loading .btn-txt{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.info-box{padding:10px 13px;border-radius:var(--rsm);font-size:12px;line-height:1.5;border:1px solid}
+.info-box.info{background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.25);color:#93c5fd}
+.info-box.warn{background:rgba(234,179,8,.07);border-color:rgba(234,179,8,.25);color:#fde047}
+.toast{position:fixed;bottom:calc(70px + var(--safe-b));left:14px;right:14px;z-index:300;padding:14px 16px;border-radius:var(--r);font-family:var(--display);font-weight:700;font-size:13px;display:flex;align-items:center;gap:10px;transform:translateY(12px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.toast.ok{background:var(--ok);color:#fff}
+.toast.error{background:var(--danger);color:#fff}
+.toast.show{transform:translateY(0);opacity:1}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:400;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)}
+.overlay.hidden{display:none}
+.overlay-card{background:var(--s1);border:1px solid var(--bd2);border-radius:16px;padding:28px;width:100%;max-width:380px}
+.overlay-title{font-family:var(--display);font-weight:800;font-size:22px;color:var(--acc);margin-bottom:8px}
+.overlay-sub{font-size:13px;color:var(--muted2);line-height:1.6;margin-bottom:20px}
+.overlay-input{background:var(--s2);border:1.5px solid var(--bd2);color:var(--txt);padding:11px 13px;border-radius:var(--rsm);font-family:var(--mono);font-size:11px;width:100%;outline:none;margin-bottom:8px}
+.overlay-input:focus{border-color:var(--acc)}
+.overlay-note{font-size:11px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.btn-row{display:flex;gap:8px}
+.btn-sm{font-family:var(--display);font-weight:700;font-size:12px;padding:10px 16px;border-radius:var(--rsm);cursor:pointer;border:none;text-transform:uppercase}
+.btn-ghost{background:var(--s2);border:1px solid var(--bd2);color:var(--muted2)}
+.btn-accent{background:var(--acc);color:#000}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-card">
+    <div class="overlay-title">Setup Awal</div>
+    <div class="overlay-sub">Masukkan URL Web App dari Google Apps Script. URL ini digunakan untuk sync data dan kirim form.</div>
+    <input class="overlay-input" id="url-input" type="url" placeholder="https://script.google.com/macros/s/...">
+    <div class="overlay-note">Belum setup? Klik "Lewati" untuk mode demo.</div>
+    <div class="btn-row">
+      <button class="btn-sm btn-ghost" style="flex:1" onclick="skipSetup()">Lewati</button>
+      <button class="btn-sm btn-accent" style="flex:2" onclick="saveUrl()">Simpan & Mulai</button>
+    </div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div>
+      <div class="logo">DARATMAS</div>
+      <div class="logo-tag">Tire Control</div>
+    </div>
+    <div class="sync-chip" onclick="syncMaster(true)" title="Tap untuk sync ulang">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Sync</span>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tab active" onclick="go('a')"><div class="tab-icon">🔧</div><div class="tab-label">Pasang/Copot</div></div>
+    <div class="tab" onclick="go('b')"><div class="tab-icon">🔄</div><div class="tab-label">Vulkanisir</div></div>
+    <div class="tab" onclick="go('c')"><div class="tab-icon">📋</div><div class="tab-label">Cek Rutin</div></div>
+    <div class="tab" onclick="go('d')"><div class="tab-icon">➕</div><div class="tab-label">Ban Baru</div></div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- FORM A -->
+<div class="screen active" id="sc-a">
+  <div class="page-hdr">
+    <div class="page-icon">🔧</div>
+    <div><div class="page-title">Pasang / Copot</div><div class="page-sub">Catat pergerakan ban luar</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-hdr-dot"></div>EVENT</div>
+    <div class="card-body">
+      <div class="field"><div class="field-lbl">Tanggal <span class="req">*</span></div><input type="date" id="a-tgl"></div>
+      <div class="field">
+        <div class="field-lbl">Jenis Event <span class="req">*</span></div>
+        <div class="seg">
+          <div class="seg-btn on" id="ev-pasang" onclick="setEv('Pasang')">⬇ PASANG</div>
+          <div class="seg-btn" id="ev-copot" onclick="setEv('Copot')">⬆ COPOT</div>
+        </div>
+        <input type="hidden" id="a-ev" value="Pasang">
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-hdr-dot" style="background:var(--head-col)"></div>IDENTITAS UNIT</div>
+    <div class="card-body">
+      <div class="info-box info">Posisi 1–6 = HEAD → isi No. Lambung &nbsp;|&nbsp; Posisi 7+ = EKOR → isi No. Ekor</div>
+      <div class="field">
+        <div class="field-lbl" style="color:var(--head-col)">No. Lambung (Head)</div>
+        <select id="a-lambung" onchange="onUnitChange()"><option value="">— Pilih (jika posisi 1–6) —</option></select>
+      </div>
+      <div class="field">
+        <div class="field-lbl" style="color:var(--ekor-col)">No. Ekor (Trailer)</div>
+        <select id="a-ekor" onchange="onUnitChange()"><option value="">— Pilih (jika posisi 7+) —</option></select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-hdr-dot"></div>POSISI BAN</div>
+    <div class="card-body">
+      <div class="field">
+        <div class="field-lbl">Tipe Ekor</div>
+        <div class="seg">
+          <div class="seg-btn on" id="tp-20" onclick="setTipe('20ft')">20FT</div>
+          <div class="seg-btn" id="tp-40" onclick="setTipe('40ft')">40FT</div>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-lbl">Klik Posisi yang Diganti <span class="req">*</span></div>
+        <div id="diagram"></div>
+        <input type="hidden" id="a-posisi">
+        <div class="posisi-display" id="posisi-txt">Belum dipilih</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--ok)"></div>Ban Luar</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Ban Dalam</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div>Serep</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-hdr-dot"></div>BAN & ODOMETER</div>
+    <div class="card-body">
+      <div class="field">
+        <div class="field-lbl">Kode DOT Ban <span class="req">*</span></div>
+        <input type="text" id="a-dot" placeholder="Contoh: 3521BX001" oninput="this.value=this.value.toUpperCase()">
+        <div class="field-hint">Kode unik yang tercetak di dinding ban</div>
+      </div>
+      <div class="field"><div class="field-lbl">KM Odometer Head <span class="req">*</span></div><input type="number" id="a-km" placeholder="Contoh: 125000" inputmode="numeric"></div>
+      <div class="cond" id="copot-extra">
+        <div class="sep-row"><span class="sep-txt">Isi hanya jika Copot</span></div>
+        <div class="field"><div class="field-lbl">Kondisi Ban Saat Dicopot</div>
+          <select id="a-kondisi"><option value="">— Pilih kondisi —</option><option>Baik</option><option>Aus</option><option>Retak</option><option>Pecah</option><option>Tipis</option></select>
+        </div>
+        <div class="field"><div class="field-lbl">Ban Selanjutnya ke</div>
+          <select id="a-lanjut"><option value="">— Pilih —</option><option>GUDANG</option><option>DI VENDOR</option><option>AFKIR</option></select>
+        </div>
+      </div>
+      <div class="field"><div class="field-lbl">Dicatat Oleh <span class="req">*</span></div><input type="text" id="a-oleh" placeholder="Nama Kaops / Driver"></div>
+      <div class="field"><div class="field-lbl">Catatan</div><textarea id="a-cat" placeholder="Opsional..."></textarea></div>
+    </div>
+  </div>
+  <button class="btn-kirim" id="btn-a" onclick="kirimA(event)"><div class="spin"></div><span class="btn-txt">KIRIM</span></button>
+</div>
+
+<!-- FORM B -->
+<div class="screen" id="sc-b">
+  <div class="page-hdr">
+    <div class="page-icon">🔄</div>
+    <div><div class="page-title">Vulkanisir</div><div class="page-sub">Kirim ke vendor atau catat kembali</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-hdr-dot"></div>KIRIM KE VENDOR</div>
+    <div class="card-body">
+      <div class="field"><div class="field-lbl">Tanggal Kirim <span class="req">*</span></div><input type="date" id="b-tgl"></div>
+      <div class="field"><div class="field-lbl">Kode DOT Ban <span class="req">*</span></div><input type="text" id="b-dot" placeholder="Kode DOT ban yang dikirim" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="field"><div class="field-lbl">KM Saat Dicopot <span class="req">*</span></div><input type="number" id="b-km" placeholder="KM odometer head" inputmode="numeric"></div>
+      <div class="field"><div class="field-lbl">Vulkanisir Ke- <span class="req">*</span></div><input type="number" id="b-ke" placeholder="Ini vulkanisir yang ke berapa?" inputmode="numeric" min="1"></div>
+      <div class="field">
+        <div class="field-lbl">Nama Vendor <span class="req">*</span></div>
+        <!-- Dropdown dari MASTER_VENDOR + opsi manual -->
+        <select id="b-vendor-sel" onchange="onVendorChange()"><option value="">— Pilih vendor —</option></select>
+        <input type="text" id="b-vendor-txt" placeholder="Atau ketik nama vendor manual" style="margin-top:6px;display:none">
+        <input type="hidden" id="b-vendor">
+      </div>
+      <div class="field"><div class="field-lbl">Biaya Jasa (Rp) <span class="req">*</span></div><input type="number" id="b-biaya" placeholder="Contoh: 350000" inputmode="numeric"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-hdr-dot" style="background:var(--ok)"></div>UPDATE SAAT BAN KEMBALI</div>
+    <div class="card-body">
+      <div class="info-box warn">Isi bagian ini hanya saat ban sudah kembali dari vendor</div>
+      <div class="field"><div class="field-lbl">Tanggal Kembali</div><input type="date" id="b-tgl-k"></div>
+      <div class="field"><div class="field-lbl">Status Hasil</div>
+        <select id="b-status"><option value="">— Pilih —</option><option>Layak Pakai</option><option>Afkir – Tidak Layak</option></select>
+      </div>
+      <div class="field"><div class="field-lbl">Catatan</div><textarea id="b-cat" placeholder="Kondisi setelah vulkanisir..."></textarea></div>
+    </div>
+  </div>
+  <button class="btn-kirim" id="btn-b" onclick="kirimB(event)"><div class="spin"></div><span class="btn-txt">KIRIM</span></button>
+</div>
+
+<!-- FORM C -->
+<div class="screen" id="sc-c">
+  <div class="page-hdr">
+    <div class="page-icon">📋</div>
+    <div><div class="page-title">Cek Rutin</div><div class="page-sub">Pengecekan ban tiap 14 hari per head</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-hdr-dot"></div>DETAIL PENGECEKAN</div>
+    <div class="card-body">
+      <div class="field"><div class="field-lbl">Tanggal Cek <span class="req">*</span></div><input type="date" id="c-tgl"></div>
+      <div class="field"><div class="field-lbl" style="color:var(--head-col)">No. Lambung (Head) <span class="req">*</span></div>
+        <select id="c-lambung"><option value="">— Pilih Head yang dicek —</option></select>
+      </div>
+      <div class="field"><div class="field-lbl">KM Saat Cek <span class="req">*</span></div><input type="number" id="c-km" placeholder="KM odometer" inputmode="numeric"></div>
+      <div class="field"><div class="field-lbl">Kondisi Umum <span class="req">*</span></div>
+        <select id="c-kondisi"><option value="">— Pilih —</option><option>Baik</option><option>Perhatian</option><option>Perlu Tindakan Segera</option></select>
+      </div>
+      <div class="field"><div class="field-lbl">Posisi Bermasalah</div><input type="text" id="c-pos-msl" placeholder="Contoh: 3, 8, 14 (pisah koma)"></div>
+      <div class="field"><div class="field-lbl">Detail Masalah</div><textarea id="c-detail" placeholder="Deskripsi per posisi..."></textarea></div>
+      <div class="field"><div class="field-lbl">Tindak Lanjut</div>
+        <select id="c-tindak"><option value="">— Pilih —</option><option>Tidak Ada</option><option>Jadwalkan Ganti</option><option>Langsung Ganti</option><option>Kirim Vulkanisir</option><option>Rotasi</option></select>
+      </div>
+      <div class="field"><div class="field-lbl">Dicek Oleh <span class="req">*</span></div><input type="text" id="c-oleh" placeholder="Nama Kaops / Driver"></div>
+      <div class="field"><div class="field-lbl">Catatan</div><textarea id="c-cat" placeholder="Opsional..."></textarea></div>
+    </div>
+  </div>
+  <button class="btn-kirim" id="btn-c" onclick="kirimC(event)"><div class="spin"></div><span class="btn-txt">KIRIM</span></button>
+</div>
+
+<!-- FORM D -->
+<div class="screen" id="sc-d">
+  <div class="page-hdr">
+    <div class="page-icon">➕</div>
+    <div><div class="page-title">Ban Baru</div><div class="page-sub">Daftarkan ban ke master data</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-hdr-dot"></div>DATA BAN</div>
+    <div class="card-body">
+      <div class="field"><div class="field-lbl">Kode DOT <span class="req">*</span></div>
+        <input type="text" id="d-dot" placeholder="Kode unik pada ban" oninput="this.value=this.value.toUpperCase()">
+        <div class="field-hint">Kode yang tercetak di dinding ban</div>
+      </div>
+      <div class="field"><div class="field-lbl">Merek <span class="req">*</span></div><input type="text" id="d-merek" placeholder="Bridgestone / GT Radial / Dunlop / dll"></div>
+      <div class="field"><div class="field-lbl">Tahun Buat <span class="req">*</span></div>
+        <input type="number" id="d-tahun" placeholder="2 digit terakhir DOT. Contoh: 23" inputmode="numeric" min="0" max="99">
+        <div class="field-hint">Contoh: DOT berakhir …2523 → isi 23</div>
+      </div>
+      <div class="field"><div class="field-lbl">Jenis Perolehan <span class="req">*</span></div>
+        <select id="d-perol"><option value="">— Pilih —</option><option>Ban Original</option><option>Vulkanisir Beli</option><option>Vulkanisir Sendiri</option></select>
+      </div>
+      <div class="field"><div class="field-lbl">Status Awal</div>
+        <select id="d-status"><option value="GUDANG">GUDANG (default)</option><option value="TERPASANG">TERPASANG</option></select>
+      </div>
+      <div class="field"><div class="field-lbl">Catatan</div><textarea id="d-cat" placeholder="No. faktur, supplier, dll..."></textarea></div>
+    </div>
+  </div>
+  <button class="btn-kirim" id="btn-d" onclick="kirimD(event)"><div class="spin"></div><span class="btn-txt">KIRIM</span></button>
+</div>
+
+</div>
+
+<div class="toast" id="toast"><span id="toast-icon">✓</span><span id="toast-msg"></span></div>
+
+<script>
+// ═══════════════════════════
+// STATE
+// ═══════════════════════════
+let SCRIPT_URL = localStorage.getItem('d_url') || '';
+let masterData = { heads:[], ekors:[], vendors:[] };
+
+const AXLES = {
+  '20ft':[
+    {lbl:'HEAD — DEPAN',slots:[{n:1,t:'luar'},{n:2,t:'luar'}]},
+    {lbl:'HEAD — ENGKEL',slots:[{n:3,t:'luar'},{n:4,t:'dalam'},{sp:1},{n:5,t:'dalam'},{n:6,t:'luar'}]},
+    {lbl:'EKOR — AXLE A',slots:[{n:7,t:'luar'},{n:8,t:'dalam'},{sp:1},{n:9,t:'dalam'},{n:10,t:'luar'}]},
+    {lbl:'EKOR — AXLE B',slots:[{n:11,t:'luar'},{n:12,t:'dalam'},{sp:1},{n:13,t:'dalam'},{n:14,t:'luar'}]},
+    {lbl:'SEREP',slots:[{n:15,t:'serep'}]}
+  ],
+  '40ft':[
+    {lbl:'HEAD — DEPAN',slots:[{n:1,t:'luar'},{n:2,t:'luar'}]},
+    {lbl:'HEAD — ENGKEL',slots:[{n:3,t:'luar'},{n:4,t:'dalam'},{sp:1},{n:5,t:'dalam'},{n:6,t:'luar'}]},
+    {lbl:'EKOR — AXLE A',slots:[{n:7,t:'luar'},{n:8,t:'dalam'},{sp:1},{n:9,t:'dalam'},{n:10,t:'luar'}]},
+    {lbl:'EKOR — AXLE B',slots:[{n:11,t:'luar'},{n:12,t:'dalam'},{sp:1},{n:13,t:'dalam'},{n:14,t:'luar'}]},
+    {lbl:'EKOR — AXLE C',slots:[{n:15,t:'luar'},{n:16,t:'dalam'},{sp:1},{n:17,t:'dalam'},{n:18,t:'luar'}]},
+    {lbl:'SEREP',slots:[{n:19,t:'serep'}]}
+  ]
+};
+
+const POS_NAME={1:'Depan Kiri (Head)',2:'Depan Kanan (Head)',3:'Engkel Kiri Luar (Head)',4:'Engkel Kiri Dalam (Head)',5:'Engkel Kanan Dalam (Head)',6:'Engkel Kanan Luar (Head)',7:'Ekor Kiri Luar A',8:'Ekor Kiri Dalam A',9:'Ekor Kanan Dalam A',10:'Ekor Kanan Luar A',11:'Ekor Kiri Luar B',12:'Ekor Kiri Dalam B',13:'Ekor Kanan Dalam B',14:'Ekor Kanan Luar B',15:'Ekor Kiri Luar C / Serep 20ft',16:'Ekor Kiri Dalam C',17:'Ekor Kanan Dalam C',18:'Ekor Kanan Luar C',19:'Serep 40ft'};
+
+let currentTipe='20ft', selectedPos=null, currentEv='Pasang';
+
+// ═══════════════════════════
+// SYNC MASTER DATA FROM SHEETS
+// ═══════════════════════════
+function setSyncStatus(status, label) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = `sync-dot ${status}`;
+  lbl.textContent = label;
+}
+
+async function syncMaster(manual=false) {
+  if (!SCRIPT_URL) {
+    setSyncStatus('error', 'Offline');
+    useFallbackData();
+    return;
+  }
+
+  setSyncStatus('loading', 'Sync...');
+  try {
+    const resp = await fetch(`${SCRIPT_URL}?t=${Date.now()}`, { method:'GET' });
+    const data = await resp.json();
+
+    if (data.status === 'ok') {
+      masterData = { heads: data.heads||[], ekors: data.ekors||[], vendors: data.vendors||[] };
+      localStorage.setItem('d_master', JSON.stringify(masterData));
+      localStorage.setItem('d_master_ts', Date.now());
+      populateDropdowns();
+      setSyncStatus('ok', 'Tersync');
+      if (manual) showToast('Data berhasil disinkron dari Sheets');
+    } else {
+      throw new Error('Response error');
+    }
+  } catch(e) {
+    // Try cache
+    const cached = localStorage.getItem('d_master');
+    if (cached) {
+      masterData = JSON.parse(cached);
+      const ts = localStorage.getItem('d_master_ts');
+      const age = ts ? Math.round((Date.now()-Number(ts))/60000) : '?';
+      populateDropdowns();
+      setSyncStatus('error', `Cache ${age}m`);
+      if (manual) showToast(`Pakai data cache (${age} menit lalu) — cek koneksi`, 'error');
+    } else {
+      useFallbackData();
+      setSyncStatus('error', 'Fallback');
+      if (manual) showToast('Gagal sync — pakai data bawaan', 'error');
+    }
+  }
+}
+
+function useFallbackData() {
+  // Fallback: generate placeholder data
+  masterData.heads = Array.from({length:26},(_,i)=>{
+    const n=i+1;
+    return {lambung:`H-${String(n).padStart(2,'0')}`,nopol:`L${1000+n*7}XY`,ekor:`E-${String(n).padStart(2,'0')}`};
+  });
+  masterData.ekors = Array.from({length:26},(_,i)=>{
+    const n=i+1;
+    return {ekor:`E-${String(n).padStart(2,'0')}`,tipe:n%3===0?'40ft':'20ft',lambung:`H-${String(n).padStart(2,'0')}`};
+  });
+  masterData.vendors = [];
+  populateDropdowns();
+}
+
+function populateDropdowns() {
+  // Clear & repopulate No. Lambung selects
+  ['a-lambung','c-lambung'].forEach(id => {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Pilih (jika posisi 1–6) —</option>';
+    masterData.heads.forEach(h => {
+      const o = document.createElement('option');
+      o.value = h.lambung;
+      o.textContent = `${h.lambung}${h.nopol?' — '+h.nopol:''}`;
+      sel.appendChild(o);
+    });
+    if (cur) sel.value = cur;
+  });
+
+  // No. Ekor
+  const ekorSel = document.getElementById('a-ekor');
+  const curEkor = ekorSel.value;
+  ekorSel.innerHTML = '<option value="">— Pilih (jika posisi 7+) —</option>';
+  masterData.ekors.forEach(e => {
+    const o = document.createElement('option');
+    o.value = e.ekor;
+    o.textContent = `${e.ekor} (${e.tipe})`;
+    ekorSel.appendChild(o);
+  });
+  if (curEkor) ekorSel.value = curEkor;
+
+  // Vendor dropdown
+  const vendorSel = document.getElementById('b-vendor-sel');
+  vendorSel.innerHTML = '<option value="">— Pilih vendor —</option>';
+  masterData.vendors.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v.nama;
+    o.textContent = `${v.nama}${v.kota?' · '+v.kota:''}`;
+    vendorSel.appendChild(o);
+  });
+  // Add manual option
+  const oManual = document.createElement('option');
+  oManual.value = '__manual__';
+  oManual.textContent = '+ Ketik nama vendor lain...';
+  vendorSel.appendChild(oManual);
+}
+
+function onVendorChange() {
+  const sel = document.getElementById('b-vendor-sel');
+  const txt = document.getElementById('b-vendor-txt');
+  const hid = document.getElementById('b-vendor');
+  if (sel.value === '__manual__') {
+    txt.style.display = 'block';
+    txt.focus();
+    hid.value = '';
+    txt.oninput = () => { hid.value = txt.value; };
+  } else {
+    txt.style.display = 'none';
+    hid.value = sel.value;
+  }
+}
+
+// ═══════════════════════════
+// DIAGRAM
+// ═══════════════════════════
+function renderDiagram(tipe) {
+  const wrap = document.getElementById('diagram');
+  wrap.innerHTML = '<div class="diagram-wrap"><div class="diagram-title">KLIK POSISI YANG DIGANTI</div></div>';
+  const inner = wrap.querySelector('.diagram-wrap');
+  AXLES[tipe].forEach(axle => {
+    const grp = document.createElement('div'); grp.className='axle-group';
+    const lbl = document.createElement('div'); lbl.className='axle-label'; lbl.textContent=axle.lbl; grp.appendChild(lbl);
+    const row = document.createElement('div'); row.className='axle-slots';
+    axle.slots.forEach(s => {
+      if (s.sp) { const sp=document.createElement('div'); sp.className='spacer-slot'; row.appendChild(sp); }
+      else {
+        const el = document.createElement('div');
+        el.className = `slot ${s.t}${selectedPos===s.n?' on':''}`;
+        el.innerHTML = `<span class="slot-n">${s.n}</span><span class="slot-t">${s.t==='luar'?'L':s.t==='dalam'?'D':'SRP'}</span>`;
+        el.onclick = () => selectPos(s.n);
+        row.appendChild(el);
+      }
+    });
+    grp.appendChild(row); inner.appendChild(grp);
+  });
+}
+
+function selectPos(n) {
+  selectedPos=n;
+  document.getElementById('a-posisi').value=`${n} – ${POS_NAME[n]}`;
+  const d=document.getElementById('posisi-txt');
+  d.textContent=`✓  Posisi ${n} — ${POS_NAME[n]}`; d.className='posisi-display selected';
+  renderDiagram(currentTipe);
+  if (n>=1&&n<=6) document.getElementById('a-ekor').value='';
+  else document.getElementById('a-lambung').value='';
+}
+
+function setTipe(t) {
+  currentTipe=t; selectedPos=null;
+  document.getElementById('a-posisi').value='';
+  const d=document.getElementById('posisi-txt'); d.textContent='Belum dipilih'; d.className='posisi-display';
+  document.getElementById('tp-20').className=`seg-btn${t==='20ft'?' on':''}`;
+  document.getElementById('tp-40').className=`seg-btn${t==='40ft'?' on':''}`;
+  renderDiagram(t);
+}
+
+function onUnitChange() {
+  const ekor=document.getElementById('a-ekor').value;
+  if (ekor) {
+    const u=masterData.ekors.find(e=>e.ekor===ekor);
+    if (u) setTipe(u.tipe);
+  }
+}
+
+function setEv(ev) {
+  currentEv=ev; document.getElementById('a-ev').value=ev;
+  document.getElementById('ev-pasang').className=`seg-btn${ev==='Pasang'?' on':''}`;
+  document.getElementById('ev-copot').className=`seg-btn${ev==='Copot'?' on':''}`;
+  document.getElementById('copot-extra').className=`cond${ev==='Copot'?' show':''}`;
+}
+
+// ═══════════════════════════
+// NAV
+// ═══════════════════════════
+function go(sc) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`sc-${sc}`).classList.add('active');
+  ['a','b','c','d'].forEach((s,i)=>{ if(s===sc) document.querySelectorAll('.tab')[i].classList.add('active'); });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════
+// TOAST
+// ═══════════════════════════
+function showToast(msg, type='ok') {
+  const t=document.getElementById('toast');
+  t.className=`toast ${type} show`;
+  document.getElementById('toast-icon').textContent=type==='ok'?'✓':'✗';
+  document.getElementById('toast-msg').textContent=msg;
+  setTimeout(()=>t.classList.remove('show'),3400);
+}
+
+function setLoad(id,on){const b=document.getElementById(id);b.disabled=on;b.classList.toggle('loading',on);}
+function gv(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+function clr(ids){ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;if(el.tagName==='TEXTAREA'||el.tagName==='SELECT')el.value='';else if(el.type!=='date'&&el.type!=='hidden')el.value='';});}
+
+// ═══════════════════════════
+// SEND
+// ═══════════════════════════
+async function send(form, data) {
+  // Save to local history regardless
+  const h=JSON.parse(localStorage.getItem('d_hist')||'[]');
+  h.unshift({form,data,ts:new Date().toISOString(),sent:!!SCRIPT_URL});
+  localStorage.setItem('d_hist',JSON.stringify(h.slice(0,100)));
+
+  if (!SCRIPT_URL) return true; // demo mode
+
+  const fd=new FormData();
+  fd.append('form',form); fd.append('data',JSON.stringify(data));
+  try {
+    const r=await fetch(SCRIPT_URL,{method:'POST',body:fd});
+    const j=await r.json();
+    return j.status==='ok';
+  } catch(e) { return false; }
+}
+
+// ═══════════════════════════
+// KIRIM FORMS
+// ═══════════════════════════
+async function kirimA(e) {
+  const tgl=gv('a-tgl'),ev=gv('a-ev'),lambung=gv('a-lambung'),ekor=gv('a-ekor');
+  const dot=gv('a-dot').toUpperCase(),posisi=gv('a-posisi'),km=gv('a-km'),oleh=gv('a-oleh');
+  if(!tgl||!ev||!dot||!posisi||!km||!oleh){showToast('Lengkapi semua field wajib (*)','error');return;}
+  const posNo=parseInt(posisi);
+  if(posNo>=1&&posNo<=6&&!lambung){showToast('Posisi 1–6 ada di HEAD — pilih No. Lambung','error');return;}
+  if(posNo>=7&&!ekor){showToast('Posisi 7+ ada di EKOR — pilih No. Ekor','error');return;}
+  setLoad('btn-a',true);
+  const ok=await send('A',{tanggal:tgl,event:ev,lambung,ekor,kode_dot:dot,posisi,km_truk:km,kondisi:gv('a-kondisi'),lanjut_ke:gv('a-lanjut'),oleh,catatan:gv('a-cat')});
+  setLoad('btn-a',false);
+  if(ok){
+    showToast(`${ev} ban ${dot} pos.${posNo} → ${lambung||ekor}`);
+    const sn=gv('a-oleh');clr(['a-lambung','a-ekor','a-dot','a-km','a-kondisi','a-lanjut','a-cat']);
+    document.getElementById('a-oleh').value=sn;selectedPos=null;
+    document.getElementById('a-posisi').value='';
+    document.getElementById('posisi-txt').textContent='Belum dipilih';
+    document.getElementById('posisi-txt').className='posisi-display';
+    setEv('Pasang');renderDiagram(currentTipe);
+  } else showToast('Gagal kirim — cek koneksi','error');
+}
+
+async function kirimB(e) {
+  const tgl=gv('b-tgl'),dot=gv('b-dot').toUpperCase(),km=gv('b-km'),vendor=gv('b-vendor'),biaya=gv('b-biaya');
+  if(!tgl||!dot||!km||!vendor||!biaya){showToast('Lengkapi semua field wajib (*)','error');return;}
+  setLoad('btn-b',true);
+  const ok=await send('B',{tgl_kirim:tgl,kode_dot:dot,km_copot:km,vulk_ke:gv('b-ke'),vendor,biaya,tgl_kembali:gv('b-tgl-k'),status:gv('b-status'),catatan:gv('b-cat')});
+  setLoad('btn-b',false);
+  if(ok){
+    showToast(`Vulkanisir ban ${dot} → ${vendor} tercatat`);
+    clr(['b-dot','b-km','b-ke','b-tgl-k','b-status','b-cat','b-biaya']);
+    document.getElementById('b-vendor-sel').value='';
+    document.getElementById('b-vendor').value='';
+    document.getElementById('b-vendor-txt').style.display='none';
+  } else showToast('Gagal kirim — cek koneksi','error');
+}
+
+async function kirimC(e) {
+  const tgl=gv('c-tgl'),lambung=gv('c-lambung'),km=gv('c-km'),kondisi=gv('c-kondisi'),oleh=gv('c-oleh');
+  if(!tgl||!lambung||!km||!kondisi||!oleh){showToast('Lengkapi semua field wajib (*)','error');return;}
+  setLoad('btn-c',true);
+  const ok=await send('C',{tanggal:tgl,id_unit:lambung,km,kondisi,posisi_bermasalah:gv('c-pos-msl'),detail:gv('c-detail'),tindak:gv('c-tindak'),oleh,catatan:gv('c-cat')});
+  setLoad('btn-c',false);
+  if(ok){
+    showToast(`Cek rutin ${lambung} berhasil dicatat`);
+    const sn=gv('c-oleh');clr(['c-lambung','c-km','c-kondisi','c-pos-msl','c-detail','c-tindak','c-cat']);
+    document.getElementById('c-oleh').value=sn;
+  } else showToast('Gagal kirim — cek koneksi','error');
+}
+
+async function kirimD(e) {
+  const dot=gv('d-dot').toUpperCase(),merek=gv('d-merek'),tahun=gv('d-tahun'),perol=gv('d-perol');
+  if(!dot||!merek||!tahun||!perol){showToast('Lengkapi semua field wajib (*)','error');return;}
+  setLoad('btn-d',true);
+  const ok=await send('D',{kode_dot:dot,merek,tahun,perolehan:perol,status:gv('d-status')||'GUDANG',catatan:gv('d-cat')});
+  setLoad('btn-d',false);
+  if(ok){
+    showToast(`Ban ${dot} (${merek}) berhasil didaftarkan`);
+    clr(['d-dot','d-merek','d-tahun','d-perol','d-cat']);document.getElementById('d-status').value='GUDANG';
+  } else showToast('Gagal kirim — cek koneksi','error');
+}
+
+// ═══════════════════════════
+// SETUP
+// ═══════════════════════════
+function saveUrl() {
+  const url=document.getElementById('url-input').value.trim();
+  if(!url||!url.includes('script.google.com')){showToast('URL tidak valid','error');return;}
+  SCRIPT_URL=url; localStorage.setItem('d_url',url);
+  document.getElementById('overlay').classList.add('hidden');
+  syncMaster();
+}
+function skipSetup() {
+  document.getElementById('overlay').classList.add('hidden');
+  useFallbackData();
+  setSyncStatus('error','Demo');
+  showToast('Mode demo aktif','error');
+}
+
+// ═══════════════════════════
+// INIT
+// ═══════════════════════════
+function init() {
+  const now=new Date();
+  const today=now.toISOString().split('T')[0];
+  ['a-tgl','b-tgl','c-tgl'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
+  const sn=localStorage.getItem('d_nama')||'';
+  if(sn){['a-oleh','c-oleh'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=sn;});}
+  renderDiagram('20ft');
+  if(!SCRIPT_URL){document.getElementById('overlay').classList.remove('hidden');return;}
+  document.getElementById('overlay').classList.add('hidden');
+  // Try cache first for instant load, then sync in background
+  const cached=localStorage.getItem('d_master');
+  if(cached){
+    masterData=JSON.parse(cached); populateDropdowns();
+    setSyncStatus('ok','Cache');
+  }
+  syncMaster(); // background sync
+}
+
+init();
+</script>
+</body>
+</html>
